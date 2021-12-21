@@ -15,3 +15,8 @@ m_e = 9.10938291e-28 # g
 T_ion_thresh = 1e5 #K
 # adiabatic index
 hydro_gamma = 5.0 / 3.0
+
+# kpc
+kpc = 3.08567758e+21 # cm
+# MSol
+MSol = 1.98841586e+33 # g

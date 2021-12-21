@@ -17,20 +17,26 @@ class mcrt_grid:
     the grid to use
     """
 
-    dimension = None
+    dimension = 2
     extent = 0
+    boxlen = 0 # size of box in each dimension
+    dx = 0 # size of cell in each dimension
 
     density = None
     internal_energy = None
     mass_fractions = None
     temperature = None
+    mean_specific_intensity = None
+    cell_index = None
 
-    def __init__(self, extent = 64, dimension=3):
+    def __init__(self, boxlen, extent = 64, dimension=2):
         """
         extent: grid size in each dimension
         dimension: how many dims to work in 
         """
 
+        self.boxlen = boxlen
+        self.dx = boxlen / extent
         self.dimension = dimension
         self.extent = extent
 
@@ -51,8 +57,41 @@ class mcrt_grid:
         self.internal_energy = np.zeros(shape, dtype=float)
         self.mass_fractions = np.zeros(shape_comp, dtype=float)
         self.temperature = np.zeros(shape, dtype=float)
+        self.mean_specific_intensity = np.zeros(shape, dtype=float)
+        self.cell_index = np.zeros(shape, dtype=int)
 
-    
+        self.assign_cell_index()
+
+        return
+
+    def assign_cell_index(self):
+        """
+        Generate cell indices
+        """
+
+        if self.dimension == 2:
+            for i in range(self.extent):
+                for j in range(self.extent):
+                    ind = i * self.extent + j
+                    self.cell_index[i, j] = ind
+
+        elif self.dimension == 3:
+            for i in range(self.extent):
+                for j in range(self.extent):
+                    for k in range(self.extent):
+                        ind = i * self.extent**2 + j * self.extent + k
+                        self.cell_index[i, j, k] = ind
+        return
+
+    def get_cell_center(self, i, j, k):
+        """
+        Get the cell center with all 3 cell indices given
+        """
+        x = ((i + 0.5) / self.extent) * self.boxlen
+        y = ((j + 0.5) / self.extent) * self.boxlen
+        z = ((k + 0.5) / self.extent) * self.boxlen
+        return np.array([x, y, z])
+
     def dump(self, number, basename="output_"):
         """
         Dump the entire struct as a snapshot
@@ -201,3 +240,38 @@ class mcrt_grid:
         Given the internal energy, density, and ionization mass fractions,
         compute the temperature of the entire grid
         """
+        
+        if self.dimension == 2:
+            XH0 = self.mass_fractions[:, :, 0]
+            XHp = self.mass_fractions[:, :, 1]
+            if NSPECIES > 2:
+                XHe = self.mass_fractions[:, :, 2]
+                XHep = self.mass_fractions[:, :, 3]
+                XHepp = self.mass_fractions[:, :, 4]
+            else:
+                XHe = np.zeros(self.mass_fractions[:, :, 0].shape)
+                XHep = np.zeros(self.mass_fractions[:, :, 0].shape)
+                XHepp = np.zeros(self.mass_fractions[:, :, 0].shape)
+        elif self.dimension == 3:
+            XH0 = self.mass_fractions[:, :, :, 0]
+            XHp = self.mass_fractions[:, :, :, 1]
+            if NSPECIES > 2:
+                XHe = self.mass_fractions[:, :, :, 2]
+                XHep = self.mass_fractions[:, :, :, 3]
+                XHepp = self.mass_fractions[:, :, :, 4]
+            else:
+                XHe = np.zeros(self.mass_fractions[:, :, :, 0].shape)
+                XHep = np.zeros(self.mass_fractions[:, :, :, 0].shape)
+                XHepp = np.zeros(self.mass_fractions[:, :, :, 0].shape)
+
+        mu = mean_molecular_weight(XH0, XHp, XHe0, XHep, XHepp)
+        self.temperature = gas_temperature(self.internal_energy, mu)
+
+        return
+
+    def update_cell_radiation(self, i, j, k, l):
+        """
+        i, j, k: cell indices
+        l : length passed through this cell
+        """
+        self.mean_specific_intensity += l

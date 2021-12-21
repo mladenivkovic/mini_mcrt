@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-#-----------------------------------
-# Run tests.
-#-----------------------------------
+#-------------------------------------------------
+# Select systematically different directions for
+# 2D and check that the propagation works.
+# Assume 1 source in center.
+#-------------------------------------------------
 
 from mcrt_grid import *
 from constants import kpc, MSol
@@ -15,26 +17,21 @@ my_grid = mcrt_grid(boxlen, extent = 64, dimension = 2)
 
 my_grid.init_density("const", const_dens_val = 13.) # works
 my_grid.init_internal_energy("const", const_u_val = 1e16) # works
-#  my_grid.init_mass_fractions("const", const_mass_fractions_val = [1, 0]) works
-my_grid.init_mass_fractions("equilibrium", XH = 1.)
-#  my_grid.dump(0) # works
+my_grid.init_mass_fractions("const", const_mass_fractions_val = [1, 0])
+my_grid.dump(0)
 
-#  test_array = np.ones((12, 12), dtype=float) * 17
-#  test_mass_fractions_array = np.ones((12, 12, 2), dtype=float) * 18.
-#  my_grid.init_density("manual", manual_dens_array = test_array) # works
-#  my_grid.init_internal_energy("manual", manual_u_array = test_array) # works
-#  my_grid.init_mass_fractions("manual", manual_mass_fractions_array = test_mass_fractions_array) # works
-
-#  print(my_grid.density)
-#  print(my_grid.internal_energy)
-#  print("Mass fractions final", my_grid.mass_fractions)
 
 my_grid.dump(0)
 for p in range(npackets):
 
+    # make new packet
     packet = photon_packet(0.5 * boxlen, 0.5 * boxlen, 0., 0.)
+
+    # select next phi
     phi = p/npackets * 2 * np.pi 
     packet.direction = np.array([phi, 0.])
+
+    # set initial cell packet is in
     if phi < 0.5 * np.pi :
         packet.cell_index_i = int(my_grid.extent // 2)
         packet.cell_index_j = int(my_grid.extent // 2)
@@ -51,12 +48,11 @@ for p in range(npackets):
     is_in_box = True
     it = 0
     while is_in_box:
+        # propagate packet
         it += 1
         packet.propagate(my_grid)
         is_in_box = packet.is_in_box(my_grid)
-        #  if it % 100 == 0:
         print("packet = {0:9d}, iter = {1:6d}".format(p, it))
-    #  if p % 100 == 0:
-    #  print("Finished packet {0:0d}".format(p), it)
-    my_grid.dump(1)
+
+my_grid.dump(1)
 
