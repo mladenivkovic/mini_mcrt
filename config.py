@@ -5,7 +5,7 @@
 #----------------------------
 
 def error(*args):
-    print(args)
+    print(*args)
     quit()
 
 # use HI and HII only for now
