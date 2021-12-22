@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-#----------------------------------------
+# ----------------------------------------
 # This module defines the grid for the
 # MCRT programs
-#----------------------------------------
+# ----------------------------------------
 
 from config import *
 from ionization_equilibrium import get_temperature_from_internal_energy
@@ -19,8 +19,8 @@ class mcrt_grid:
 
     dimension = 2
     extent = 0
-    boxlen = 0 # size of box in each dimension
-    dx = 0 # size of cell in each dimension
+    boxlen = 0  # size of box in each dimension
+    dx = 0  # size of cell in each dimension
 
     density = None
     internal_energy = None
@@ -29,7 +29,7 @@ class mcrt_grid:
     mean_specific_intensity = None
     cell_index = None
 
-    def __init__(self, boxlen, extent = 64, dimension=2):
+    def __init__(self, boxlen, extent=64, dimension=2):
         """
         extent: grid size in each dimension
         dimension: how many dims to work in 
@@ -51,7 +51,6 @@ class mcrt_grid:
             shape_comp = (extent, extent, extent, NSPECIES)
         else:
             error("unknown dimension", dimension)
-            
 
         self.density = np.zeros(shape, dtype=float)
         self.internal_energy = np.zeros(shape, dtype=float)
@@ -79,7 +78,7 @@ class mcrt_grid:
             for i in range(self.extent):
                 for j in range(self.extent):
                     for k in range(self.extent):
-                        ind = i * self.extent**2 + j * self.extent + k
+                        ind = i * self.extent ** 2 + j * self.extent + k
                         self.cell_index[i, j, k] = ind
         return
 
@@ -97,12 +96,12 @@ class mcrt_grid:
         Dump the entire struct as a snapshot
         """
         fname = basename + str(number).zfill(4) + ".pkl"
-        f = open(fname, 'wb')
+        f = open(fname, "wb")
         pickle.dump(self, f)
         f.close()
         return
 
-    def init_density(self, method, const_dens_val=None, manual_dens_array = None):
+    def init_density(self, method, const_dens_val=None, manual_dens_array=None):
         """
         initialize the density fields.   
 
@@ -114,16 +113,24 @@ class mcrt_grid:
         """
 
         if method == "const":
-            if const_dens_val is None or const_dens_val < 0.:
+            if const_dens_val is None or const_dens_val < 0.0:
                 error("Invalid density", const_dens_val)
-            
+
             if self.dimension == 2:
                 self.density[:, :] = const_dens_val
             if self.dimension == 3:
                 self.density[:, :, :] = const_dens_val
         elif method == "manual":
-            if manual_dens_array is None or manual_dens_array.shape != self.density.shape:
-                error("Invalid density array. Have shape", manual_dens_array.shape, "need shape", self.density.shape)
+            if (
+                manual_dens_array is None
+                or manual_dens_array.shape != self.density.shape
+            ):
+                error(
+                    "Invalid density array. Have shape",
+                    manual_dens_array.shape,
+                    "need shape",
+                    self.density.shape,
+                )
             self.density = manual_dens_array
 
         else:
@@ -131,7 +138,7 @@ class mcrt_grid:
 
         return
 
-    def init_internal_energy(self, method, const_u_val=None, manual_u_array = None):
+    def init_internal_energy(self, method, const_u_val=None, manual_u_array=None):
         """
         initialize the specific internal energy fields.   
 
@@ -143,17 +150,25 @@ class mcrt_grid:
         """
 
         if method == "const":
-            if const_u_val is None or const_u_val < 0.:
+            if const_u_val is None or const_u_val < 0.0:
                 error("Invalid internal energy", const_u_val)
-            
+
             if self.dimension == 2:
                 self.internal_energy[:, :] = const_u_val
             if self.dimension == 3:
                 self.internal_energy[:, :, :] = const_u_val
 
         elif method == "manual":
-            if manual_u_array is None or manual_u_array.shape != self.internal_energy.shape:
-                error("Invalid internal energy array. Have shape", manual_u_array.shape, "need shape", self.internal_energy.shape)
+            if (
+                manual_u_array is None
+                or manual_u_array.shape != self.internal_energy.shape
+            ):
+                error(
+                    "Invalid internal energy array. Have shape",
+                    manual_u_array.shape,
+                    "need shape",
+                    self.internal_energy.shape,
+                )
             self.internal_energy = manual_u_array
 
         else:
@@ -161,8 +176,13 @@ class mcrt_grid:
 
         return
 
-
-    def init_mass_fractions(self, method, const_mass_fractions_val=None, manual_mass_fractions_array = None, XH = -1.):
+    def init_mass_fractions(
+        self,
+        method,
+        const_mass_fractions_val=None,
+        manual_mass_fractions_array=None,
+        XH=-1.0,
+    ):
         """
         initialize the mass_fractions fields.
 
@@ -180,22 +200,37 @@ class mcrt_grid:
                 error("Invalid mass_fractions", const_mass_fractions_val)
             const_mass_fractions_val = np.array(const_mass_fractions_val)
             if const_mass_fractions_val.shape[0] != NSPECIES:
-                error("Invalid species count. Got", const_mass_fractions_val.shape[0], "need", NSPECIES)
-            
+                error(
+                    "Invalid species count. Got",
+                    const_mass_fractions_val.shape[0],
+                    "need",
+                    NSPECIES,
+                )
+
             if self.dimension == 2:
                 self.mass_fractions[:, :] = const_mass_fractions_val
             if self.dimension == 3:
                 self.mass_fractions[:, :, :] = const_mass_fractions_val
 
         elif method == "manual":
-            if manual_mass_fractions_array is None or manual_mass_fractions_array.shape != self.mass_fractions.shape:
-                error("Invalid mass_fractions array. Have shape", manual_mass_fractions_array.shape, "need shape", self.mass_fractions.shape)
+            if (
+                manual_mass_fractions_array is None
+                or manual_mass_fractions_array.shape != self.mass_fractions.shape
+            ):
+                error(
+                    "Invalid mass_fractions array. Have shape",
+                    manual_mass_fractions_array.shape,
+                    "need shape",
+                    self.mass_fractions.shape,
+                )
             self.mass_fractions = manual_mass_fractions_array
 
         elif method == "equilibrium":
             XH_arr = np.ones(self.internal_energy.shape) * XH
-            XHe_arr = 1. - XH_arr
-            T, mu, XH0, XHp, XHe0, XHep, XHepp = get_temperature_from_internal_energy(self.internal_energy, XH_arr, XHe_arr)
+            XHe_arr = 1.0 - XH_arr
+            T, mu, XH0, XHp, XHe0, XHep, XHepp = get_temperature_from_internal_energy(
+                self.internal_energy, XH_arr, XHe_arr
+            )
             self.temperature = T
             if self.dimension == 2:
                 self.mass_fractions[:, :, 0] = XH0
@@ -219,28 +254,26 @@ class mcrt_grid:
 
         return
 
-
     def check_mass_fractions(self):
         """
         check that the mass fractions sum up to ~1
         """
         # in case of roundoff errors
-        mask_neg = self.mass_fractions < 0.
-        self.mass_fractions[mask_neg] = 0.
+        mask_neg = self.mass_fractions < 0.0
+        self.mass_fractions[mask_neg] = 0.0
 
         comp_tot = self.mass_fractions.sum(axis=-1)
-        diff = np.abs(comp_tot - 1.)
+        diff = np.abs(comp_tot - 1.0)
         mask = diff > 1e-3
         if mask.any():
             error("Got wrong mass fractions", comp_tot[mask])
-
 
     def update_temperature(self):
         """
         Given the internal energy, density, and ionization mass fractions,
         compute the temperature of the entire grid
         """
-        
+
         if self.dimension == 2:
             XH0 = self.mass_fractions[:, :, 0]
             XHp = self.mass_fractions[:, :, 1]

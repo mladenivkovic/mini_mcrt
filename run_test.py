@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-#-----------------------------------
+# -----------------------------------
 # Run tests.
-#-----------------------------------
+# -----------------------------------
 
 from mcrt_grid import *
 from constants import kpc, MSol
@@ -11,12 +11,12 @@ import numpy as np
 
 npackets = 1000
 boxlen = 10 * kpc
-my_grid = mcrt_grid(boxlen, extent = 64, dimension = 2)
+my_grid = mcrt_grid(boxlen, extent=64, dimension=2)
 
-my_grid.init_density("const", const_dens_val = 13.) # works
-my_grid.init_internal_energy("const", const_u_val = 1e16) # works
+my_grid.init_density("const", const_dens_val=13.0)  # works
+my_grid.init_internal_energy("const", const_u_val=1e16)  # works
 #  my_grid.init_mass_fractions("const", const_mass_fractions_val = [1, 0]) works
-my_grid.init_mass_fractions("equilibrium", XH = 1.)
+my_grid.init_mass_fractions("equilibrium", XH=1.0)
 #  my_grid.dump(0) # works
 
 #  test_array = np.ones((12, 12), dtype=float) * 17
@@ -32,10 +32,10 @@ my_grid.init_mass_fractions("equilibrium", XH = 1.)
 my_grid.dump(0)
 for p in range(npackets):
 
-    packet = photon_packet(0.5 * boxlen, 0.5 * boxlen, 0., 0.)
-    phi = p/npackets * 2 * np.pi 
-    packet.direction = np.array([phi, 0.])
-    if phi < 0.5 * np.pi :
+    packet = photon_packet(0.5 * boxlen, 0.5 * boxlen, 0.0, 0.0)
+    phi = p / npackets * 2 * np.pi
+    packet.direction = np.array([phi, 0.0])
+    if phi < 0.5 * np.pi:
         packet.cell_index_i = int(my_grid.extent // 2)
         packet.cell_index_j = int(my_grid.extent // 2)
     elif phi < np.pi:
@@ -59,4 +59,3 @@ for p in range(npackets):
     #  if p % 100 == 0:
     #  print("Finished packet {0:0d}".format(p), it)
     my_grid.dump(1)
-

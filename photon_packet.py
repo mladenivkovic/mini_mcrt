@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
 
-#--------------------------------------
+# --------------------------------------
 # Photon packet related class
-#--------------------------------------
+# --------------------------------------
 
 import numpy as np
 from config import *
 
-class photon_packet():
 
-    x = 0.
-    y = 0.
-    z = 0.
+class photon_packet:
+
+    x = 0.0
+    y = 0.0
+    z = 0.0
     direction = np.zeros(2)
-    energy = 0.
-    cell_index_i = -1 # first index of cell to transverse next
-    cell_index_j = -1 # second index of cell to transverse next
-    cell_index_k = -1 # third index of cell to transverse next
+    energy = 0.0
+    cell_index_i = -1  # first index of cell to transverse next
+    cell_index_j = -1  # second index of cell to transverse next
+    cell_index_k = -1  # third index of cell to transverse next
     optical_depth_transversed = 0
     optical_depth_to_reach = -1
-    
+
     def __init__(self, x, y, z, energy):
         self.x = x
         self.y = y
@@ -29,12 +30,12 @@ class photon_packet():
 
     def generate_random_direction(self):
         error("TODO")
-        self.direction = np.array((0., 0.))
+        self.direction = np.array((0.0, 0.0))
         return
 
     def sample_optical_depth(self):
         error("TODO")
-        self.optical_depth_to_reach = 1.
+        self.optical_depth_to_reach = 1.0
         return
 
     def propagate(self, grid):
@@ -65,7 +66,7 @@ class photon_packet():
         zdown = zc - dx_half
 
         phi = self.direction[0]
-        
+
         xnew = None
         ynew = None
         inew = None
@@ -117,7 +118,7 @@ class photon_packet():
                 else:
                     # we're hitting the right wall
                     xnew = xup
-                    ynew = yp - grid.dx * np.tan(2 * np.pi - phi) 
+                    ynew = yp - grid.dx * np.tan(2 * np.pi - phi)
                     inew = i + 1
                     jnew = j
 
@@ -128,7 +129,7 @@ class photon_packet():
 
             # max phi to hit top wall
             dwall_top = yup - yp
-            phi_max_top = np.pi - np.arctan(dwall_top/grid.dx)
+            phi_max_top = np.pi - np.arctan(dwall_top / grid.dx)
             # max phi to hit left wall
             dwall_bottom = yp - ydown
             phi_max_left = np.pi + np.arctan(dwall_bottom / grid.dx)
@@ -187,7 +188,6 @@ class photon_packet():
                 inew = i - 1
                 jnew = j
 
-
         elif abs(yp - yup) < 1e-5 * yup:
             # top wall
             if phi < np.pi:
@@ -198,12 +198,12 @@ class photon_packet():
             phi_max_left = np.arctan(grid.dx / dwall_left) + np.pi
             # max phi to hit bottom wall
             dwall_right = xup - xp
-            phi_max_bottom = 2 * np.pi - np.arctan(grid.dx/dwall_right)
+            phi_max_bottom = 2 * np.pi - np.arctan(grid.dx / dwall_right)
 
             if phi < phi_max_left:
                 # we're hitting the left wall
                 xnew = xdown
-                ynew = yup - np.arctan(phi - np.pi) * dwall_left 
+                ynew = yup - np.arctan(phi - np.pi) * dwall_left
                 inew = i - 1
                 jnew = j
 
@@ -217,7 +217,7 @@ class photon_packet():
             else:
                 # we're hitting the right wall
                 xnew = xup
-                ynew = yup - dwall * np.tan(2 * np.pi - phi) 
+                ynew = yup - dwall * np.tan(2 * np.pi - phi)
                 inew = i + 1
                 jnew = j
 
@@ -226,9 +226,8 @@ class photon_packet():
         if inew is None or jnew is None:
             error("No inew, jnew", inew, jnew)
 
-
         # get length through the cell that has been passed
-        l = np.sqrt((xnew - xp)**2 + (ynew - yp)**2)
+        l = np.sqrt((xnew - xp) ** 2 + (ynew - yp) ** 2)
 
         grid.update_cell_radiation(i, j, k, l)
         self.cell_index_i = inew
@@ -236,7 +235,7 @@ class photon_packet():
         self.cell_index_k = 0
         self.x = xnew
         self.y = ynew
-        self.z = 0.
+        self.z = 0.0
 
         return
 
@@ -251,4 +250,3 @@ class photon_packet():
         if self.cell_index_k < 0 or self.cell_index_k >= grid.extent:
             return False
         return True
-

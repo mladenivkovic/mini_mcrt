@@ -22,8 +22,9 @@ from gas_functions import *
 # Set some initial conditions
 # --------------------------------
 
-epsilon_iter = 1e-3 # convergence criterion
+epsilon_iter = 1e-3  # convergence criterion
 iter_max = 100
+
 
 def newton_raphson_iteration(u_expect, u_guess, T_guess, mu_guess):
     """
@@ -82,12 +83,20 @@ def get_temperature_from_internal_energy(u_expect, XH, XHe):
     above_ion_thresh = T_guess > constants.T_ion_thresh
     if above_ion_thresh.any():
         XHp[above_ion_thresh] = XH[above_ion_thresh].copy()
-        XH0[above_ion_thresh] = 0. # do Hp first so you don't overwrite stuff
+        XH0[above_ion_thresh] = 0.0  # do Hp first so you don't overwrite stuff
         XHepp[above_ion_thresh] = XHe[above_ion_thresh].copy()
-        XHe0[above_ion_thresh] = 0. # do XHepp  first so you don't overwrite stuff
-        XHep[above_ion_thresh] = 0.
-        mu_guess[above_ion_thresh] = mean_molecular_weight(XH0[above_ion_thresh], XHp[above_ion_thresh], XHe0[above_ion_thresh], XHep[above_ion_thresh], XHepp[above_ion_thresh])
-        T_guess[above_ion_thresh] = gas_temperature(u_expect[above_ion_thresh], mu_guess[above_ion_thresh])
+        XHe0[above_ion_thresh] = 0.0  # do XHepp  first so you don't overwrite stuff
+        XHep[above_ion_thresh] = 0.0
+        mu_guess[above_ion_thresh] = mean_molecular_weight(
+            XH0[above_ion_thresh],
+            XHp[above_ion_thresh],
+            XHe0[above_ion_thresh],
+            XHep[above_ion_thresh],
+            XHepp[above_ion_thresh],
+        )
+        T_guess[above_ion_thresh] = gas_temperature(
+            u_expect[above_ion_thresh], mu_guess[above_ion_thresh]
+        )
 
     # get updated mean molecular weight
     XH0, XHp, XHe0, XHep, XHepp = get_mass_fractions(T_guess, XH, XHe)
@@ -120,13 +129,19 @@ def get_temperature_from_internal_energy(u_expect, XH, XHe):
         u_next = u_guess.copy()
 
         # do a Newton-Raphson iteration
-        T_next[repeat] = newton_raphson_iteration(u_expect[repeat], u_guess[repeat], T_guess[repeat], mu_guess[repeat])
+        T_next[repeat] = newton_raphson_iteration(
+            u_expect[repeat], u_guess[repeat], T_guess[repeat], mu_guess[repeat]
+        )
 
         # Given the new temperature guess, compute the
         # expected mean molecular weight
-        XH0[repeat], XHp[repeat], XHe0[repeat], XHep[repeat], XHepp[repeat] = get_mass_fractions(T_next[repeat], XH[repeat], XHe[repeat])
+        XH0[repeat], XHp[repeat], XHe0[repeat], XHep[repeat], XHepp[
+            repeat
+        ] = get_mass_fractions(T_next[repeat], XH[repeat], XHe[repeat])
 
-        mu_next[repeat] = mean_molecular_weight(XH0[repeat], XHp[repeat], XHe0[repeat], XHep[repeat], XHepp[repeat])
+        mu_next[repeat] = mean_molecular_weight(
+            XH0[repeat], XHp[repeat], XHe0[repeat], XHep[repeat], XHepp[repeat]
+        )
 
         # now given the new temperature and mass fraction guess, update the
         # expected gas internal energy
@@ -138,12 +153,20 @@ def get_temperature_from_internal_energy(u_expect, XH, XHe):
 
         # if we're oscillating between positive and negative values,
         # try a bisection to help out
-        oscillate = du_old * du < 0.
+        oscillate = du_old * du < 0.0
         if oscillate.any():
 
             T_next[oscillate] = 0.5 * (T_guess[oscillate] + T_next[oscillate])
-            XH0[oscillate], XHp[oscillate], XHe0[oscillate], XHep[oscillate], XHepp[oscillate] = get_mass_fractions(T_next[oscillate], XH[oscillate], XHe[oscillate])
-            mu_next[oscillate] = mean_molecular_weight(XH0[oscillate], XHp[oscillate], XHe0[oscillate], XHep[oscillate], XHepp[oscillate])
+            XH0[oscillate], XHp[oscillate], XHe0[oscillate], XHep[oscillate], XHepp[
+                oscillate
+            ] = get_mass_fractions(T_next[oscillate], XH[oscillate], XHe[oscillate])
+            mu_next[oscillate] = mean_molecular_weight(
+                XH0[oscillate],
+                XHp[oscillate],
+                XHe0[oscillate],
+                XHep[oscillate],
+                XHepp[oscillate],
+            )
             u_next[oscillate] = internal_energy(T_next[oscillate], mu_next[oscillate])
 
         # reset what "current values" are and iterate again

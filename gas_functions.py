@@ -200,7 +200,7 @@ def get_number_densities_array(Temp, XH, XHe):
     nH = np.zeros(XH.shape, dtype=float)
     nHe = np.zeros(XH.shape, dtype=float)
 
-    mask = XH == 0.
+    mask = XH == 0.0
     nH[mask] = 0.0
     nHe[mask] = 1.0
 

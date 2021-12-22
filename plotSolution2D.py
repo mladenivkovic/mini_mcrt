@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-#----------------------------------------
+# ----------------------------------------
 # Plot solution of a 2D problem
 # Usage:
 # ./plotSolution2D.py output_0000.pkl
-#----------------------------------------
+# ----------------------------------------
 
 import pickle
 import numpy as np
@@ -15,15 +15,14 @@ import sys
 from config import *
 
 
-
-
 fname = sys.argv[1]
 
-f = open(fname, 'rb')
+f = open(fname, "rb")
 my_grid = pickle.load(f)
 
 if my_grid.dimension != 2:
-   error("Output dimension != 2; got", my_grid.dimension) 
+    error("Output dimension != 2; got", my_grid.dimension)
+
 
 def set_colorbar(ax, im):
     """
