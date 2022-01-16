@@ -307,4 +307,8 @@ class mcrt_grid:
         i, j, k: cell indices
         l : length passed through this cell
         """
-        self.mean_specific_intensity += l
+        if self.dimension == 2:
+            self.mean_specific_intensity[i, j] += l
+            print("updating grid", i, j, l)
+        elif self.dimension == 3:
+            self.mean_specific_intensity[i, j, k] += l

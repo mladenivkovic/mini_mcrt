@@ -65,18 +65,12 @@ class photon_packet:
         zup = zc + dx_half
         zdown = zc - dx_half
 
-        phi = self.direction[0]
+        phi = self.direction[1]
 
         xnew = None
         ynew = None
         inew = None
         jnew = None
-
-        #  print("xp", xp, yp, zp)
-        #  print("xc", xc, yc, zc)
-        #  print("xlims", xdown, xup)
-        #  print("ylims", ydown, yup)
-        #  print("xp - xlim", abs(xp - xdown) / xdown, abs(xup - xp) / xup, abs(yup - yp)/yup, abs(yp - ydown)/ydown)
 
         # on which wall are we currently?
         if abs(xp - xdown) < 1e-5 * xdown:
@@ -228,14 +222,16 @@ class photon_packet:
 
         # get length through the cell that has been passed
         l = np.sqrt((xnew - xp) ** 2 + (ynew - yp) ** 2)
-
         grid.update_cell_radiation(i, j, k, l)
+
         self.cell_index_i = inew
         self.cell_index_j = jnew
         self.cell_index_k = 0
         self.x = xnew
         self.y = ynew
         self.z = 0.0
+
+        print("phi", phi * 0.5 / np.pi, "going from", i, j, "to", inew, jnew)
 
         return
 

@@ -7,19 +7,28 @@
 # -------------------------------------------------
 
 from mcrt_grid import *
-from constants import kpc, MSol
+from constants import kpc, MSol, LSol, yr
 from photon_packet import photon_packet
 import numpy as np
 
-npackets = 4
+npackets = 1000 # packets per step
 boxlen = 10 * kpc
-my_grid = mcrt_grid(boxlen, extent=13, dimension=2)
+luminosity = 45000 * LSol
+dt = 10000 * yr # timesteps in 10kyr
 
+# initialize grid
+my_grid = mcrt_grid(boxlen, extent=64, dimension=2)
 my_grid.init_density("const", const_dens_val=13.0)  # works
 my_grid.init_internal_energy("const", const_u_val=1e16)  # works
 my_grid.init_mass_fractions("const", const_mass_fractions_val=[1, 0])
-
 my_grid.dump(0)
+
+
+#------------------------------
+# one iteration of the RT.
+#------------------------------
+
+# First, scatter the radiation around
 for p in range(npackets):
 
     # make new packet
@@ -27,9 +36,9 @@ for p in range(npackets):
 
     # select next phi
     phi = p / npackets * 2 * np.pi
-    packet.direction = np.array([0., phi])
+    packet.direction = np.array([phi, 0.0])
 
-    # set initial cell packet is in
+    # set initial cell packet is in depending on the direction
     if phi < 0.5 * np.pi:
         packet.cell_index_i = int(my_grid.extent // 2)
         packet.cell_index_j = int(my_grid.extent // 2)
@@ -42,8 +51,6 @@ for p in range(npackets):
     else:
         packet.cell_index_i = int(my_grid.extent // 2)
         packet.cell_index_j = int(my_grid.extent // 2) - 1
-
-    print(phi, packet.cell_index_i, packet.cell_index_j)
 
     is_in_box = True
     it = 0
