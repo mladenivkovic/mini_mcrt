@@ -7,6 +7,7 @@
 import numpy as np
 from config import *
 
+rng = np.random.default_rng(627)
 
 class photon_packet:
 
@@ -27,22 +28,25 @@ class photon_packet:
                          #     4
     optical_depth_transversed = 0
     optical_depth_to_reach = -1
+    dt = -1. # current time step
 
-    def __init__(self, x, y, z, energy):
+    def __init__(self, x, y, z, energy, dt):
         self.x = x
         self.y = y
         self.z = z
         self.energy = energy
+        self.dt = dt
         return
 
     def generate_random_direction(self):
-        error("TODO")
-        self.direction = np.array((0.0, 0.0))
+        theta = np.arccos(2. * rng.random() - 1.)
+        phi = rng.random() * 2. * np.pi
+        self.direction = np.array((theta, phi))
         return
 
     def sample_optical_depth(self):
-        error("TODO")
-        self.optical_depth_to_reach = 1.0
+        tau = - np.log(rng.random())
+        self.optical_depth_to_reach = tau
         return
 
     def check_direction(self):
@@ -57,13 +61,17 @@ class photon_packet:
         while theta < 0.:
             theta += np.pi
 
+        if theta != self.direction[0]:
+            debugging_msg("Corrected theta from", self.direction[0], "to", theta)
+
         phi = self.direction[1]
         while phi > 2 * np.pi:
             phi -= 2 * np.pi
-            print("correction 1")
         while phi < 0.:
             phi += 2 * np.pi
-            print("correction 2")
+
+        if phi != self.direction[1]:
+            debugging_msg("Corrected phi from", self.direction[1], "to", phi)
 
         self.direction[0] = theta
         self.direction[1] = phi
@@ -72,9 +80,10 @@ class photon_packet:
         """
         Propagate through a single cell from a 
         wall to the next wall.
-        """
 
-        debug_verbose = False
+        returns: absorbed
+        true if photon packet is absorbed and shouldn't propagate any further
+        """
 
         i = self.cell_index_i
         j = self.cell_index_j
@@ -112,8 +121,7 @@ class photon_packet:
         if self.cell_wall_index == 3:
             # left wall
             #-------------
-            if debug_verbose:
-                print("-- left wall")
+            debugging_msg("left wall")
 
             if phi > 0.5 * np.pi and phi < 1.5 * np.pi:
                 error("wrong wall for given angle v1")
@@ -162,8 +170,7 @@ class photon_packet:
         elif self.cell_wall_index == 1:
             # right wall
             #------------
-            if debug_verbose:
-                print("-- right wall")
+            debugging_msg("right wall")
             if phi < 0.5 * np.pi or phi > 1.5 * np.pi:
                 error("wrong wall for given angle v2")
 
@@ -204,8 +211,7 @@ class photon_packet:
         elif self.cell_wall_index == 4:
             # bottom wall
             #------------------
-            if debug_verbose:
-                print("-- bottom wall")
+            debugging_msg("bottom wall")
             if phi > np.pi:
                 error("wrong wall for given angle v3")
 
@@ -246,8 +252,7 @@ class photon_packet:
         elif self.cell_wall_index == 2:
             # top wall
             #---------------
-            if debug_verbose:
-                print("-- top wall")
+            debugging_msg("top wall")
             if phi < np.pi:
                 error("wrong wall for given angle v4")
 
@@ -296,26 +301,56 @@ class photon_packet:
 
         # get length through the cell that has been passed
         l = np.sqrt((xnew - xp) ** 2 + (ynew - yp) ** 2)
-        grid.update_cell_radiation(i, j, k, l)
+        tau = grid.get_optical_depth(i, j, k, l, self.energy)
+        grid.update_cell_radiation(i, j, k, l, self.energy, self.dt, tau)
+        self.optical_depth_transversed += tau
 
-        self.cell_index_i = inew
-        self.cell_index_j = jnew
-        self.cell_index_k = 0
-        self.cell_wall_index = next_wall_index
-        self.x = xnew
-        self.y = ynew
-        self.z = 0.0
+        if self.optical_depth_transversed >= self.optical_depth_to_reach:
+            # check whether we're done
+            scatter = self.is_scattered(grid, i, j, k)
+            if scatter:
+                # re-emit
+                self.cell_index_i = i
+                self.cell_index_j = j
+                self.cell_index_k = k
+                self.x = xc
+                self.y = yc
+                self.z = 0.
+                self.generate_random_direction()
+                self.sample_optical_depth()
+                self.optical_depth_transversed = 0.
+                self.first_propagation(grid, scatter=True)
+                return False
+            else:
+                return True
 
-        #  print("phi", phi / np.pi, "* pi; going from", i, j, "to", inew, jnew)
+        else:
+            # update and continue
 
-        return
+            self.cell_index_i = inew
+            self.cell_index_j = jnew
+            self.cell_index_k = 0
+            self.cell_wall_index = next_wall_index
+            self.x = xnew
+            self.y = ynew
+            self.z = 0.0
+            return False
 
-    def first_propagation(self, grid):
+        return False
+
+    def first_propagation(self, grid, scatter=False):
         """
         First propagation: From arbitrary 
         position to a cell wall.
+
+        scatter: if True, we're re-emitting a photon from a cell.
+        Don't update the grid radiation fields then, as it is already
+        updated during the normal propagation
         """
+
         self.check_direction()
+        self.optical_depth_transversed = 0.
+
         self.cell_index_i = int(self.x / grid.boxlen * grid.extent)
         self.cell_index_j = int(self.y / grid.boxlen * grid.extent)
         self.cell_index_k = int(self.z / grid.boxlen * grid.extent)
@@ -410,7 +445,7 @@ class photon_packet:
                 inew = i - 1
                 jnew = j
                 xnew = xdown
-                ynew = xp - delx / np.tan(phi_new)
+                ynew = yp - delx * np.tan(phi - np.pi)
                 next_wall_index = 1 # if we hit left wall, next cell's wall will be right
         else:
             # we hit lower or right wall
@@ -442,7 +477,11 @@ class photon_packet:
 
         # get length through the cell that has been passed
         l = np.sqrt((xnew - xp) ** 2 + (ynew - yp) ** 2)
-        grid.update_cell_radiation(i, j, k, l)
+        if not scatter:
+            tau = grid.get_optical_depth(i, j, k, l, self.energy)
+            grid.update_cell_radiation(i, j, k, l, self.energy, self.dt, tau)
+            self.optical_depth_transversed += tau
+
 
         self.cell_index_i = inew
         self.cell_index_j = jnew
@@ -452,7 +491,7 @@ class photon_packet:
         self.z = 0.0
         self.cell_wall_index = next_wall_index
 
-        print("phi", phi / np.pi, "pi; going from", i, j, "to", inew, jnew)
+        debugging_msg("phi", phi / np.pi, "pi; going from", i, j, "to", inew, jnew)
 
         return
 
@@ -467,3 +506,14 @@ class photon_packet:
         if self.cell_index_k < 0 or self.cell_index_k >= grid.extent:
             return False
         return True
+
+    def is_scattered(self, grid, i, j, k):
+        """
+        When the packet reaches the predestined optical depth,
+        is it scattered? If not, it's absorbed
+        """
+
+        # note: this has no physical basis, it's just
+        # for demo purposes
+        scattered = rng.random() <= 0.9
+        return scattered

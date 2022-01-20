@@ -10,10 +10,10 @@ from photon_packet import photon_packet
 import numpy as np
 
 npackets = 8
-#  boxlen = 10 * kpc
-boxlen = 65
+boxlen = 10 * kpc
+#  boxlen = 65
 # Note: Stick with uneven number of cells for now
-my_grid = mcrt_grid(boxlen, extent=21, dimension=2)
+my_grid = mcrt_grid(boxlen, extent=129, dimension=2)
 
 my_grid.init_density("const", const_dens_val=13.0)  # works
 my_grid.init_internal_energy("const", const_u_val=1e16)  # works
@@ -32,17 +32,20 @@ my_grid.init_mass_fractions("equilibrium", XH=1.0)
 #  print("Mass fractions final", my_grid.mass_fractions)
 
 my_grid.dump(0)
-npackets = 2
+npackets = 1
 for p in range(npackets):
 
-    packet = photon_packet(0.5 * boxlen, 0.5 * boxlen, 0.0, 0.0)
-    #  phi = (p + 1) / npackets * 2 * np.pi + 0.18 * np.pi
-    phi = (3. + 4 * p)/8. * 2 * np.pi + 0.18 * np.pi
+    #  phi = p / npackets * 2 * np.pi
+    #  phi = (3. + 4 * p)/8. * 2 * np.pi + 0.18 * np.pi
     #  phi = 7./8. * 2 * np.pi + 0.18 * np.pi
     #  phi = 1.75 * np.pi
     #  phi = 0.75 * np.pi
-    #  print("        RUNNING PHI", p/npackets * 2)
-    packet.direction = np.array([0.0, phi])
+    #  packet.direction = np.array([0.0, phi])
+
+    # generate initial values
+    packet = photon_packet(0.5 * boxlen, 0.5 * boxlen, 0.0, 0.0)
+    packet.generate_random_direction()
+    packet.sample_optical_depth()
 
     # deposit packet from initial position to cell wall
     packet.first_propagation(my_grid)

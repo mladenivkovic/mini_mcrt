@@ -36,16 +36,35 @@ def set_colorbar(ax, im):
 
 
 intensity = my_grid.mean_specific_intensity
-#  intensity[intensity < 1e-6] = 1e-6
+path_length_estimator = my_grid.path_length_estimator
+absorbed_energy = my_grid.absorbed_energy
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-im = ax.imshow(intensity.T, origin="lower", norm=SymLogNorm(linthresh=1e-4, base=10))
-set_colorbar(ax, im)
+fig = plt.figure(figsize=(8, 4))
+
+ax1 = fig.add_subplot(121)
+im1 = ax1.imshow(intensity.T, origin="lower", norm=SymLogNorm(linthresh=1e-4, base=10))
+set_colorbar(ax1, im1)
+ax1.set_xlabel("x")
+ax1.set_ylabel("y")
+ax1.set_title("Mean Specific Intensity")
+
+#  ax2 = fig.add_subplot(132)
+#  im2 = ax2.imshow(path_length_estimator.T, origin="lower", norm=SymLogNorm(linthresh=1e-4, base=10))
+#  set_colorbar(ax2, im2)
+#  ax2.set_xlabel("x")
+#  ax2.set_ylabel("y")
+#  ax2.set_title("Path Length Estimator")
+
+ax3 = fig.add_subplot(122)
+im3 = ax3.imshow(absorbed_energy.T, origin="lower", norm=SymLogNorm(linthresh=1e-4, base=10))
+set_colorbar(ax3, im3)
+ax3.set_xlabel("x")
+ax3.set_ylabel("y")
+ax3.set_title("Absorbed Energy")
+
+
+
+plt.tight_layout()
 #  plt.show()
 
-ax.set_xlabel("x")
-ax.set_ylabel("y")
-ax.set_title("Mean Specific Intensity")
-plt.tight_layout()
-plt.savefig(fname[:-4]+".png", dpi=300)
+plt.savefig(fname[:-4]+"-full.png", dpi=300)

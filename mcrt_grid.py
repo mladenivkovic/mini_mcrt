@@ -12,6 +12,10 @@ import numpy as np
 import pickle
 
 
+# Note:
+# I prepared for a full physics module, but the only working way
+# is to specify the number densities of the grid manually
+
 class mcrt_grid:
     """
     the grid to use
@@ -23,10 +27,15 @@ class mcrt_grid:
     dx = 0  # size of cell in each dimension
 
     density = None
+    number_density = None
     internal_energy = None
     mass_fractions = None
     temperature = None
+
     mean_specific_intensity = None
+    path_length_estimator = None
+    absorbed_energy = None
+
     cell_index = None
 
     def __init__(self, boxlen, extent=64, dimension=2):
@@ -53,10 +62,13 @@ class mcrt_grid:
             error("unknown dimension", dimension)
 
         self.density = np.zeros(shape, dtype=float)
+        self.number_density = np.zeros(shape, dtype=float)
         self.internal_energy = np.zeros(shape, dtype=float)
         self.mass_fractions = np.zeros(shape_comp, dtype=float)
         self.temperature = np.zeros(shape, dtype=float)
         self.mean_specific_intensity = np.zeros(shape, dtype=float)
+        self.path_length_estimator = np.zeros(shape, dtype=float)
+        self.absorbed_energy = np.zeros(shape, dtype=float)
         self.cell_index = np.zeros(shape, dtype=int)
 
         self.assign_cell_index()
@@ -135,6 +147,37 @@ class mcrt_grid:
 
         else:
             error("init_density: unknown method", method)
+
+        return
+
+    def init_number_density(self, method, const_number_dens_val=None, manual_number_dens_array=None):
+        """
+        initialize the density fields.   
+
+        method: 
+            "const" :   constant density everywhere
+                        you need to provide "const_number_dens_val"
+            "manual":   set manual array.
+                        you need to provide "manual_number_dens_array"
+        """
+
+        if method == "const":
+            if const_number_dens_val is None or const_number_dens_val < 0.0:
+                error("Invalid density", const_number_dens_val)
+
+            if self.dimension == 2:
+                self.number_density[:, :] = const_number_dens_val
+            if self.dimension == 3:
+                self.number_density[:, :, :] = const_number_dens_val
+        elif method == "manual":
+            if manual_number_dens_array is None or manual_number_dens_array.shape != self.number_density.shape:
+                error(
+                    "Invalid number_density array. Have shape",
+                    manual_number_dens_array.shape,
+                    "need shape",
+                    self.number_density.shape,
+                    )
+            self.number_density = manual_number_dens_array
 
         return
 
@@ -302,13 +345,92 @@ class mcrt_grid:
 
         return
 
-    def update_cell_radiation(self, i, j, k, l):
+    def update_cell_radiation(self, i, j, k, l, energy, dt, tau):
         """
         i, j, k: cell indices
         l : length passed through this cell
+        energy: photon packet energy
+        dt: current time step
+        tau: optical depth
         """
+
         if self.dimension == 2:
-            self.mean_specific_intensity[i, j] += l
-            print("updating grid", i, j, l)
+            volume = self.dx * self.dx
+            self.mean_specific_intensity[i, j] += energy / dt / 4 / np.pi / volume * l
+            self.path_length_estimator[i, j] += l
+            self.absorbed_energy[i, j] += tau * energy / volume
         elif self.dimension == 3:
+            error("TODO: grid update cell radiation 3D")
             self.mean_specific_intensity[i, j, k] += l
+            self.path_length_estimator[i, j, k] += l
+            self.absorbed_energy[i, j] += l
+        return
+
+
+    def get_cross_section(self, i, j, k, E):
+        """
+        get the interaction cross section of current cell 
+        i, j, k: cell indexes
+        E: photon packet energy
+        """
+
+        # note: this has no physical basis.
+        # just try to get a couple of scatterings for demo purposes.
+        # assume number density of unity to be used as default to
+        # compute optical depth
+
+        sigma = 0.5/ np.sqrt(self.extent)
+
+        return sigma
+
+    def get_number_density(self, i, j, k):
+        """
+        return current number densit of cell i, j, k
+        """
+
+        if self.dimension == 2:
+            return self.number_density[i, j]
+        elif self.dimension == 3:
+            return self.number_density[i, j, k]
+        else:
+            error("wtf?")
+        return
+
+    def get_optical_depth(self, i, j, k, l, energy):
+        """
+        Get the optical depth of the current cell
+        """
+  
+        sigma = self.get_cross_section(i, j, k, energy)
+        n = self.get_number_density(i, j, k)
+        tau = sigma * n * l
+
+        return tau
+
+    def init_step(self):
+        """
+        Initialize the grid for a new step
+        """
+
+        if self.dimension == 2:
+            #  for i in range(self.extent):
+            #      for j in range(self.extent):
+            self.path_length_estimator[:, :] = 0.
+            self.absorbed_energy[:, :] = 0.
+
+        else:
+            error("ToDo grid.init_step for 3D")
+        return
+
+    def finalise_step(self):
+        """
+        Finish up whatever needs finishing
+        """
+
+        #  if self.dimension == 2:
+        #      for i in range(self.extent):
+        #          for j in range(self.extent):
+        #  else:
+        #      error("ToDo grid.finalise_step for 3D")
+        #
+        return

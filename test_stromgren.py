@@ -36,7 +36,7 @@ for p in range(npackets):
 
     # select next phi
     phi = p / npackets * 2 * np.pi
-    packet.direction = np.array([phi, 0.0])
+    packet.direction = np.array([0., phi])
 
     # set initial cell packet is in depending on the direction
     if phi < 0.5 * np.pi:
