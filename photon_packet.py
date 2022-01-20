@@ -241,7 +241,7 @@ class photon_packet:
             if phi < phi_max_right:
                 # we're hitting the right wall
                 xnew = xup
-                ynew = yp + delx_right * np.arctan(phi)
+                ynew = yp + delx_right * np.tan(phi)
                 inew = i + 1
                 jnew = j
                 next_wall_index = (
@@ -251,9 +251,9 @@ class photon_packet:
             elif phi < phi_max_top:
                 # we're hitting the top wall
                 if phi < 0.5 * np.pi:
-                    xnew = xp + grid.dx / np.arctan(phi)
+                    xnew = xp + grid.dx * np.tan(0.5 * np.pi - phi)
                 else:
-                    xnew = xp - grid.dx / np.arctan(np.pi - phi)
+                    xnew = xp - grid.dx * np.tan(phi - 0.5 * np.pi)
                 ynew = yup
                 inew = i
                 jnew = j + 1
@@ -264,7 +264,7 @@ class photon_packet:
             else:
                 # we're hitting the left wall
                 xnew = xdown
-                ynew = yp + delx_left * np.arctan(np.pi - phi)
+                ynew = yp + delx_left * np.tan(np.pi - phi)
                 inew = i - 1
                 jnew = j
                 next_wall_index = (
@@ -424,7 +424,7 @@ class photon_packet:
                 inew = i + 1
                 jnew = j
                 xnew = xup
-                ynew = yp + np.cos(phi) * delx
+                ynew = yp + np.tan(phi) * delx
                 next_wall_index = (
                     3
                 )  # if we hit right wall, next cell's wall will be left
@@ -432,7 +432,7 @@ class photon_packet:
                 # hitting top wall
                 inew = i
                 jnew = j + 1
-                xnew = xp + dely / np.tan(phi)
+                xnew = xp + dely * np.tan(0.5 * np.pi - phi)
                 ynew = yup
                 next_wall_index = (
                     4
@@ -448,7 +448,7 @@ class photon_packet:
                 # hitting top wall
                 inew = i
                 jnew = j + 1
-                xnew = xp - dely / np.tan(phi_new)
+                xnew = xp - dely * np.tan(phi - 0.5 * np.pi)
                 ynew = yup
                 next_wall_index = (
                     4
@@ -558,5 +558,5 @@ class photon_packet:
 
         # note: this has no physical basis, it's just
         # for demo purposes
-        scattered = rng.random() <= 0.9
+        scattered = rng.random() <= 0.4
         return scattered

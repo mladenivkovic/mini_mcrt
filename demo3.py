@@ -10,7 +10,7 @@ from constants import kpc, MSol
 from photon_packet import photon_packet
 import numpy as np
 
-npackets = 50000
+npackets = 100000
 boxlen = 201
 dt = 1.0
 photon_packet_energy = 1.0
