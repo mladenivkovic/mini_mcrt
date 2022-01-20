@@ -56,15 +56,16 @@ ax1.set_title("Mean Specific Intensity")
 #  ax2.set_title("Path Length Estimator")
 
 ax3 = fig.add_subplot(122)
-im3 = ax3.imshow(absorbed_energy.T, origin="lower", norm=SymLogNorm(linthresh=1e-4, base=10))
+im3 = ax3.imshow(
+    absorbed_energy.T, origin="lower", norm=SymLogNorm(linthresh=1e-4, base=10)
+)
 set_colorbar(ax3, im3)
 ax3.set_xlabel("x")
 ax3.set_ylabel("y")
 ax3.set_title("Absorbed Energy")
 
 
-
 plt.tight_layout()
 #  plt.show()
 
-plt.savefig(fname[:-4]+"-full.png", dpi=300)
+plt.savefig(fname[:-4] + "-full.png", dpi=300)

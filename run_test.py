@@ -11,6 +11,7 @@ import numpy as np
 
 npackets = 8
 boxlen = 10 * kpc
+dt = 1
 #  boxlen = 65
 # Note: Stick with uneven number of cells for now
 my_grid = mcrt_grid(boxlen, extent=129, dimension=2)
@@ -43,7 +44,7 @@ for p in range(npackets):
     #  packet.direction = np.array([0.0, phi])
 
     # generate initial values
-    packet = photon_packet(0.5 * boxlen, 0.5 * boxlen, 0.0, 0.0)
+    packet = photon_packet(0.5 * boxlen, 0.5 * boxlen, 0.0, 1.0, dt)
     packet.generate_random_direction()
     packet.sample_optical_depth()
 

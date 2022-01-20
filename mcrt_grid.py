@@ -16,6 +16,7 @@ import pickle
 # I prepared for a full physics module, but the only working way
 # is to specify the number densities of the grid manually
 
+
 class mcrt_grid:
     """
     the grid to use
@@ -150,7 +151,9 @@ class mcrt_grid:
 
         return
 
-    def init_number_density(self, method, const_number_dens_val=None, manual_number_dens_array=None):
+    def init_number_density(
+        self, method, const_number_dens_val=None, manual_number_dens_array=None
+    ):
         """
         initialize the density fields.   
 
@@ -170,13 +173,16 @@ class mcrt_grid:
             if self.dimension == 3:
                 self.number_density[:, :, :] = const_number_dens_val
         elif method == "manual":
-            if manual_number_dens_array is None or manual_number_dens_array.shape != self.number_density.shape:
+            if (
+                manual_number_dens_array is None
+                or manual_number_dens_array.shape != self.number_density.shape
+            ):
                 error(
                     "Invalid number_density array. Have shape",
                     manual_number_dens_array.shape,
                     "need shape",
                     self.number_density.shape,
-                    )
+                )
             self.number_density = manual_number_dens_array
 
         return
@@ -366,7 +372,6 @@ class mcrt_grid:
             self.absorbed_energy[i, j] += l
         return
 
-
     def get_cross_section(self, i, j, k, E):
         """
         get the interaction cross section of current cell 
@@ -379,7 +384,7 @@ class mcrt_grid:
         # assume number density of unity to be used as default to
         # compute optical depth
 
-        sigma = 0.5/ np.sqrt(self.extent)
+        sigma = 0.5 / np.sqrt(self.extent)
 
         return sigma
 
@@ -400,7 +405,7 @@ class mcrt_grid:
         """
         Get the optical depth of the current cell
         """
-  
+
         sigma = self.get_cross_section(i, j, k, energy)
         n = self.get_number_density(i, j, k)
         tau = sigma * n * l
@@ -415,8 +420,8 @@ class mcrt_grid:
         if self.dimension == 2:
             #  for i in range(self.extent):
             #      for j in range(self.extent):
-            self.path_length_estimator[:, :] = 0.
-            self.absorbed_energy[:, :] = 0.
+            self.path_length_estimator[:, :] = 0.0
+            self.absorbed_energy[:, :] = 0.0
 
         else:
             error("ToDo grid.init_step for 3D")

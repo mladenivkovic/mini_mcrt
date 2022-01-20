@@ -13,8 +13,8 @@ import numpy as np
 
 npackets = 10000
 boxlen = 201
-dt = 1.
-photon_packet_energy = 1.
+dt = 1.0
+photon_packet_energy = 1.0
 
 
 my_grid = mcrt_grid(boxlen, extent=201, dimension=2)
@@ -23,9 +23,9 @@ n = np.ones((201, 201), dtype=float)
 for i in range(150, 201):
     for j in range(150, 201):
         n[i, j] = 10
-my_grid.init_number_density("manual", manual_number_dens_array = n)
+my_grid.init_number_density("manual", manual_number_dens_array=n)
 
-my_grid.init_internal_energy("const", const_u_val=1.)  # works
+my_grid.init_internal_energy("const", const_u_val=1.0)  # works
 my_grid.init_step()
 
 my_grid.dump(0)
@@ -44,7 +44,7 @@ for p in range(npackets):
     while is_in_box:
         it += 1
         absorbed = packet.propagate(my_grid)
-        if absorbed: 
+        if absorbed:
             break
         is_in_box = packet.is_in_box(my_grid)
 

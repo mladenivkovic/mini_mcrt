@@ -9,6 +9,7 @@ from config import *
 
 rng = np.random.default_rng(627)
 
+
 class photon_packet:
 
     x = 0.0
@@ -20,15 +21,16 @@ class photon_packet:
     cell_index_j = -1  # second index of cell to transverse next
     cell_index_k = -1  # third index of cell to transverse next
 
-    cell_wall_index = -1 # Wall index definition: 
-                         #     2
-                         #   |---|
-                         # 3 |   | 1
-                         #   |---|
-                         #     4
+    cell_wall_index = -1  
+    # Wall index definition:
+    #     2
+    #   |---|
+    # 3 |   | 1
+    #   |---|
+    #     4
     optical_depth_transversed = 0
     optical_depth_to_reach = -1
-    dt = -1. # current time step
+    dt = -1.0  # current time step
 
     def __init__(self, x, y, z, energy, dt):
         self.x = x
@@ -39,13 +41,13 @@ class photon_packet:
         return
 
     def generate_random_direction(self):
-        theta = np.arccos(2. * rng.random() - 1.)
-        phi = rng.random() * 2. * np.pi
+        theta = np.arccos(2.0 * rng.random() - 1.0)
+        phi = rng.random() * 2.0 * np.pi
         self.direction = np.array((theta, phi))
         return
 
     def sample_optical_depth(self):
-        tau = - np.log(rng.random())
+        tau = -np.log(rng.random())
         self.optical_depth_to_reach = tau
         return
 
@@ -58,7 +60,7 @@ class photon_packet:
         theta = self.direction[0]
         while theta > np.pi:
             theta -= np.pi
-        while theta < 0.:
+        while theta < 0.0:
             theta += np.pi
 
         if theta != self.direction[0]:
@@ -67,7 +69,7 @@ class photon_packet:
         phi = self.direction[1]
         while phi > 2 * np.pi:
             phi -= 2 * np.pi
-        while phi < 0.:
+        while phi < 0.0:
             phi += 2 * np.pi
 
         if phi != self.direction[1]:
@@ -116,11 +118,11 @@ class photon_packet:
         next_wall_index = None
 
         # on which wall are we currently?
-        #-----------------------------------
+        # -----------------------------------
 
         if self.cell_wall_index == 3:
             # left wall
-            #-------------
+            # -------------
             debugging_msg("left wall")
 
             if phi > 0.5 * np.pi and phi < 1.5 * np.pi:
@@ -137,14 +139,18 @@ class photon_packet:
                     ynew = yp + np.tan(phi) * grid.dx
                     inew = i + 1
                     jnew = j
-                    next_wall_index = 3 # if we hit right wall, next cell's wall will be left
+                    next_wall_index = (
+                        3
+                    )  # if we hit right wall, next cell's wall will be left
                 else:
                     # we're hitting the upper wall
                     xnew = xp + dely / np.tan(phi)
                     ynew = yup
                     inew = i
                     jnew = j + 1
-                    next_wall_index = 4 # if we hit top wall, next cell's wall will be bottom
+                    next_wall_index = (
+                        4
+                    )  # if we hit top wall, next cell's wall will be bottom
 
             elif phi >= 1.5 * np.pi:
                 # get phi max to hit lower wall before right wall
@@ -157,7 +163,9 @@ class photon_packet:
                     ynew = ydown
                     inew = i
                     jnew = j - 1
-                    next_wall_index = 2 # if we hit bottom wall, next cell's wall will be top
+                    next_wall_index = (
+                        2
+                    )  # if we hit bottom wall, next cell's wall will be top
 
                 else:
                     # we're hitting the right wall
@@ -165,11 +173,13 @@ class photon_packet:
                     ynew = yp - grid.dx * np.tan(2 * np.pi - phi)
                     inew = i + 1
                     jnew = j
-                    next_wall_index = 3 # if we hit right wall, next cell's wall will be left
+                    next_wall_index = (
+                        3
+                    )  # if we hit right wall, next cell's wall will be left
 
         elif self.cell_wall_index == 1:
             # right wall
-            #------------
+            # ------------
             debugging_msg("right wall")
             if phi < 0.5 * np.pi or phi > 1.5 * np.pi:
                 error("wrong wall for given angle v2")
@@ -187,7 +197,9 @@ class photon_packet:
                 ynew = yup
                 inew = i
                 jnew = j + 1
-                next_wall_index = 4 # if we hit top wall, next cell's wall will be bottom
+                next_wall_index = (
+                    4
+                )  # if we hit top wall, next cell's wall will be bottom
 
             elif phi < phi_max_left:
                 # we're hitting the left wall
@@ -198,7 +210,9 @@ class photon_packet:
                 xnew = xdown
                 inew = i - 1
                 jnew = j
-                next_wall_index = 1 # if we hit top left, next cell's wall will be right
+                next_wall_index = (
+                    1
+                )  # if we hit top left, next cell's wall will be right
 
             else:
                 # we're hitting the bottom wall
@@ -206,11 +220,13 @@ class photon_packet:
                 ynew = ydown
                 inew = i
                 jnew = j - 1
-                next_wall_index = 2 # if we hit bottom wall, next cell's wall will be top
+                next_wall_index = (
+                    2
+                )  # if we hit bottom wall, next cell's wall will be top
 
         elif self.cell_wall_index == 4:
             # bottom wall
-            #------------------
+            # ------------------
             debugging_msg("bottom wall")
             if phi > np.pi:
                 error("wrong wall for given angle v3")
@@ -228,7 +244,9 @@ class photon_packet:
                 ynew = yp + delx_right * np.arctan(phi)
                 inew = i + 1
                 jnew = j
-                next_wall_index = 3 # if we hit right wall, next cell's wall will be left
+                next_wall_index = (
+                    3
+                )  # if we hit right wall, next cell's wall will be left
 
             elif phi < phi_max_top:
                 # we're hitting the top wall
@@ -239,7 +257,9 @@ class photon_packet:
                 ynew = yup
                 inew = i
                 jnew = j + 1
-                next_wall_index = 4 # if we hit top wall, next cell's wall will be bottom
+                next_wall_index = (
+                    4
+                )  # if we hit top wall, next cell's wall will be bottom
 
             else:
                 # we're hitting the left wall
@@ -247,11 +267,13 @@ class photon_packet:
                 ynew = yp + delx_left * np.arctan(np.pi - phi)
                 inew = i - 1
                 jnew = j
-                next_wall_index = 1 # if we hit left wall, next cell's wall will be right
+                next_wall_index = (
+                    1
+                )  # if we hit left wall, next cell's wall will be right
 
         elif self.cell_wall_index == 2:
             # top wall
-            #---------------
+            # ---------------
             debugging_msg("top wall")
             if phi < np.pi:
                 error("wrong wall for given angle v4")
@@ -269,7 +291,9 @@ class photon_packet:
                 ynew = yp - np.arctan(phi - np.pi) * delx_left
                 inew = i - 1
                 jnew = j
-                next_wall_index = 1 # if we hit left wall, next cell's wall will be right
+                next_wall_index = (
+                    1
+                )  # if we hit left wall, next cell's wall will be right
 
             elif phi < phi_max_bottom:
                 # we're hitting the bottom wall
@@ -280,7 +304,9 @@ class photon_packet:
                 ynew = ydown
                 inew = i
                 jnew = j - 1
-                next_wall_index = 2 # if we hit bottom wall, next cell's wall will be top
+                next_wall_index = (
+                    2
+                )  # if we hit bottom wall, next cell's wall will be top
 
             else:
                 # we're hitting the right wall
@@ -288,7 +314,9 @@ class photon_packet:
                 ynew = yp - delx_right / np.tan(phi - 1.5 * np.pi)
                 inew = i + 1
                 jnew = j
-                next_wall_index = 3 # if we hit right wall, next cell's wall will be left
+                next_wall_index = (
+                    3
+                )  # if we hit right wall, next cell's wall will be left
         else:
             error("Invalid wall index", self.cell_wall_index)
 
@@ -315,10 +343,10 @@ class photon_packet:
                 self.cell_index_k = k
                 self.x = xc
                 self.y = yc
-                self.z = 0.
+                self.z = 0.0
                 self.generate_random_direction()
                 self.sample_optical_depth()
-                self.optical_depth_transversed = 0.
+                self.optical_depth_transversed = 0.0
                 self.first_propagation(grid, scatter=True)
                 return False
             else:
@@ -349,7 +377,7 @@ class photon_packet:
         """
 
         self.check_direction()
-        self.optical_depth_transversed = 0.
+        self.optical_depth_transversed = 0.0
 
         self.cell_index_i = int(self.x / grid.boxlen * grid.extent)
         self.cell_index_j = int(self.y / grid.boxlen * grid.extent)
@@ -397,14 +425,18 @@ class photon_packet:
                 jnew = j
                 xnew = xup
                 ynew = yp + np.cos(phi) * delx
-                next_wall_index = 3 # if we hit right wall, next cell's wall will be left
+                next_wall_index = (
+                    3
+                )  # if we hit right wall, next cell's wall will be left
             else:
                 # hitting top wall
                 inew = i
                 jnew = j + 1
                 xnew = xp + dely / np.tan(phi)
                 ynew = yup
-                next_wall_index = 4 # if we hit top wall, next cell's wall will be bottom
+                next_wall_index = (
+                    4
+                )  # if we hit top wall, next cell's wall will be bottom
 
         elif phi < np.pi:
             # we can hit top or left wall
@@ -418,14 +450,18 @@ class photon_packet:
                 jnew = j + 1
                 xnew = xp - dely / np.tan(phi_new)
                 ynew = yup
-                next_wall_index = 4 # if we hit top wall, next cell's wall will be bottom
+                next_wall_index = (
+                    4
+                )  # if we hit top wall, next cell's wall will be bottom
             else:
                 # hitting left wall
                 inew = i - 1
                 jnew = j
                 xnew = xdown
                 ynew = yp + delx * np.tan(phi_new)
-                next_wall_index = 1 # if we hit left wall, next cell's wall will be right
+                next_wall_index = (
+                    1
+                )  # if we hit left wall, next cell's wall will be right
 
         elif phi < 1.5 * np.pi:
             # we can hit left or lower wall
@@ -439,14 +475,18 @@ class photon_packet:
                 jnew = j - 1
                 xnew = xp - dely * np.tan(phi_new)
                 ynew = ydown
-                next_wall_index = 2 # if we hit bottom wall, next cell's wall will be top
+                next_wall_index = (
+                    2
+                )  # if we hit bottom wall, next cell's wall will be top
             else:
                 # we hit the left wall
                 inew = i - 1
                 jnew = j
                 xnew = xdown
                 ynew = yp - delx * np.tan(phi - np.pi)
-                next_wall_index = 1 # if we hit left wall, next cell's wall will be right
+                next_wall_index = (
+                    1
+                )  # if we hit left wall, next cell's wall will be right
         else:
             # we hit lower or right wall
             delx = max(xup - xp, 1e-6 * grid.dx)
@@ -459,14 +499,18 @@ class photon_packet:
                 jnew = j - 1
                 xnew = xp + dely * np.tan(phi_new)
                 ynew = ydown
-                next_wall_index = 2 # if we hit bottom wall, next cell's wall will be top
+                next_wall_index = (
+                    2
+                )  # if we hit bottom wall, next cell's wall will be top
             else:
                 # we're hitting right wall
                 inew = i + 1
                 jnew = j
                 xnew = xup
                 ynew = yp - delx / np.tan(phi_new)
-                next_wall_index = 3 # if we hit right wall, next cell's wall will be left
+                next_wall_index = (
+                    3
+                )  # if we hit right wall, next cell's wall will be left
 
         if xnew is None or ynew is None:
             error("Error in propagate: No xnew, ynew", xnew, ynew)
@@ -481,7 +525,6 @@ class photon_packet:
             tau = grid.get_optical_depth(i, j, k, l, self.energy)
             grid.update_cell_radiation(i, j, k, l, self.energy, self.dt, tau)
             self.optical_depth_transversed += tau
-
 
         self.cell_index_i = inew
         self.cell_index_j = jnew

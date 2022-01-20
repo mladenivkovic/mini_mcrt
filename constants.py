@@ -5,7 +5,7 @@
 # -------------------------
 
 # Boltzmann constant
-kB = 1.3806488e-16    # erg / K
+kB = 1.3806488e-16  # erg / K
 # atomic mass unit
 m_u = 1.66053892e-24  # g
 # electron mass
@@ -19,8 +19,8 @@ hydro_gamma = 5.0 / 3.0
 # kpc
 kpc = 3.08567758e21  # cm
 # MSol
-MSol = 1.98841586e33 # g
+MSol = 1.98841586e33  # g
 # Solar luminosity
-LSol = 3.827e+33     # erg/s
+LSol = 3.827e33  # erg/s
 # year
-yr = 31557600.       # s
+yr = 31557600.0  # s
